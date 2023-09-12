@@ -1,0 +1,52 @@
+Mongo DB
+
+For installation follow this 
+https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/
+
+
+Replication
+
+Creating there different containers and installing ubuntu:20.04 in it
+And then installing mongoldb in it
+
+Now from the mongod.conf need to add the bind ips 
+{setled down the ip in my file is 0.0.0.0 } 
+
+Now added the replicates “rs1” in all conf files of the configuration
+
+The ip of the primary host should be in the mongo.conf file of both nodes and the ip of both nodes should be in the conf file of primary ip. I you want  to add hostname instead of ip. Then change the /etc/host file of mongo and ad the ip against the host name
+Start the mongo in all the servers
+In primary server run the command rs.initiate().
+The add the nodes with the command rs.add(“ip or host name of slave nod”)
+
+
+
+
+PITR (point in time recovery)
+For PITR replication should must be working
+For the task we created the database and added some data took backup then added some more data and then deleted the data to recover it from the logs
+Now we are taking whole oplog backup though below command.
+
+Mongodump   - d local  -c ‘oplog.rs’  --out desination
+Or
+mongodump --oplog --out /home
+
+For point in time recovery you must need to know the timestamp of the records deleted.
+
+d=db.getSiblingDB("local")
+d.oplog.rs.find({"ns":"test.mycol1","op":"d"}).sort({$natural:1}).limit(5)
+
+Here we are checking last deleted records timestamp through below command.
+
+d=db.getSiblingDB("local")
+d.oplog.rs.find({"ns":"test.mycol1","op":"d"}).sort({$natural:-1}).limit(5)
+
+Then we renamed the files names in the oplong backup directory   noticed the timespan for the inserted data from the logs which got listed with the above commands
+
+Used the following command to restore the logs
+mongorestore --oplogReplay --oplogLimit 1533210442:1 ./
+Or 
+mongorestore --oplogReplay --oplogLimit 1693561277 /home
+
+Replace the timespan with the required one. 
+
