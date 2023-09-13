@@ -1,0 +1,49 @@
+Mongo Replication 
+
+- [1] Installation is done using .sh file by just executing it mongo is working
+
+
+Next editing the configuration file 
+
+
+- [2] In hosts file adding the hosts name and Ip-address of the other containers
+Your /etc/hosts would look like this
+
+ 172.17.0.2	 3bf8bb324f1b
+ 172.17.0.3	4bd2169af393
+ 172.17.0.4	4890c1246a98
+
+- [3] Now moving to the /etc/mongod.conf  Adding following configurations in .yaml file
+
+replication:
+  replSetName: "rs1”
+
+
+Am running the mongo In each mongo ubuntu container having mongo service
+
+- [3] Now randomly going to any container and running this command make that mongo as primary
+rs.initiate()
+
+
+- [4] And then adding the node in primary node using this command
+rs.add({host:'4890c1246a98:27017',priority:0})
+
+NOTE:
+Priority 0 means there is no chance of this node to become master
+Priority 1 means higher chances
+Priority 0 to 1 means the priority of the node varies
+
+
+- [5] Now deleting the node using this command
+rs.remove('4890c1246a98:27017')
+
+
+To check the status we will use the command
+rs.status()
+
+To check the configuratio of the nodes will be using this command
+rs.config()
+
+
+
+
