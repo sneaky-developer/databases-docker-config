@@ -24,4 +24,6 @@ sudo systemctl start mongod
 
 sudo systemctl daemon-reload
 
+sudo systemctl enable mongod
+
 sudo systemctl status mongod
