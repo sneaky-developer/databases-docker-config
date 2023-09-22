@@ -35,3 +35,41 @@ $usermod -aG sudo ansible
 $hostname -i
 [IP-address]
 
+Ansible
+
+
+$apt-get update
+
+$apt-get install nano telnet ssh ansible -y
+
+$service ssh start
+
+$ssh-keygen
+
+$ssh-copy-id ansible@ip-address-host
+
+$ssh username@ip-address-host
+
+
+
+
+
+
+For installing in host
+
+$apt-get update
+
+$apt-get install ssh nano telnet -y
+
+#adding  user with ansible name assigning the root privileges
+
+$service ssh start
+
+$adduser ansible
+
+$usermod -aG sudo ansible 
+
+$hostname -i
+[IP-address]
+
+https://chat.openai.com/c/323a5374-7390-4009-b393-fb9cda76f35a
