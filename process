@@ -1,0 +1,81 @@
+
+wget \
+  https://github.com/ncabatoff/process-exporter/releases/download/v0.7.10/process-exporter-0.7.10.linux-amd64.tar.gz
+
+sudo groupadd -f process_exporter
+sudo useradd -g process_exporter --no-create-home --shell /bin/false process_exporter
+sudo mkdir /etc/process_exporter
+sudo chown process_exporter:process_exporter /etc/process_exporter
+
+tar -xvf process-exporter-0.7.10.linux-amd64.tar.gz
+mv process-exporter-0.7.10.linux-amd64 process_exporter-files
+
+sudo cp process_exporter-files/process-exporter /usr/bin/
+sudo chown process_exporter:process_exporter /usr/bin/process-exporter
+
+cat <<EOF | sudo tee /etc/process_exporter/process-exporter.yaml
+
+process_names:
+  - name: "{{.Comm}}"
+    cmdline:
+    - '.+'
+EOF
+
+sudo chown process_exporter:process_exporter /etc/process_exporter/process-exporter.yaml
+
+cat <<EOF | sudo tee /usr/lib/systemd/system/process_exporter.service
+
+[Unit]
+Description=Process Exporter for Prometheus
+Documentation=https://github.com/ncabatoff/process-exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=process_exporter
+Group=process_exporter
+Type=simple
+Restart=on-failure
+ExecStart=/usr/bin/process-exporter \
+  --config.path /etc/process_exporter/process-exporter.yaml \
+  --web.listen-address=:9256
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo chmod 664 /usr/lib/systemd/system/process_exporter.service
+
+sudo systemctl daemon-reload
+sudo systemctl restart process_exporter
+
+WEBHOOK_URL="https://app.whistleit.io/api/webhooks/651fbcbe1c16c337130bd28c"
+
+# Get the hostname
+HOSTNAME=$(hostname)
+
+# Get the host IP address (IPv4)
+HOST_IP=$(hostname -I | awk '{print $1}')
+
+# Run systemctl status node-exporter and capture the output
+STATUS_OUTPUT=$(systemctl status process_exporter)
+
+# Check if node-exporter is active and running
+if [[ $STATUS_OUTPUT == *Active:\ active\ \(running\)* ]]; then
+  NODE_EXPORTER_STATUS="Process Exporter is running."
+else
+   NODE_EXPORTER_STATUS="Process Exporter is not running."
+fi
+
+    # Construct the JSON payload
+PAYLOAD='{
+"hostname": "'"$HOSTNAME"'",
+"host_ip": "'"$HOST_IP"'",
+"node_exporter_status": "'"$NODE_EXPORTER_STATUS"'"
+}'
+
+# Send the payload to the webhook
+curl -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$WEBHOOK_URL"
+
+
+rm -rf process-exporter-0.6.0.linux-amd64.tar.gz process_exporter-files
